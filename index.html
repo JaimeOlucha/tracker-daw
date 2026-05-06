@@ -1,0 +1,2499 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>SalvaDAW — Tracker 2º DAW</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link
+		href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+		rel="stylesheet">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+	<style>
+		/* ──────────────────────────────────────────────────────
+       TOKENS
+    ────────────────────────────────────────────────────── */
+		:root {
+			/* Backgrounds */
+			--bg: #07071a;
+			--surf: #0d0d22;
+			--surf2: #13132c;
+			--surf3: #1a1a36;
+			--surf4: #20203f;
+
+			/* Borders */
+			--brd: #22224a;
+			--brd2: #2c2c5a;
+
+			/* Brand */
+			--p: #7c6dfa;
+			--p2: #a78bfa;
+			--p3: #c4b0fd;
+			--p-glow: rgba(124, 109, 250, .22);
+			--p-tint: rgba(124, 109, 250, .10);
+			--p-tint2: rgba(124, 109, 250, .05);
+
+			/* Semantic colours — opaque surfaces for contrast */
+			--g: #22d4a2;
+			/* green */
+			--g-surf: #072a20;
+			--g-brd: #1a6650;
+			--g-text: #9eedd8;
+
+			--r: #f07878;
+			/* red */
+			--r-surf: #2a0f0f;
+			--r-brd: #6a2828;
+			--r-text: #f8b4b4;
+
+			--b: #60a5fa;
+			/* blue */
+			--b-surf: #071838;
+			--b-brd: #1a3a7a;
+			--b-text: #a0c8fd;
+
+			--y: #fbbf24;
+			/* yellow */
+			--y-surf: #221800;
+			--y-brd: #5a3e0a;
+			--y-text: #fde08a;
+
+			/* Text */
+			--t: #dde0f8;
+			--t2: #6e6e9a;
+			--t3: #383860;
+
+			/* Misc */
+			--r8: 8px;
+			--r12: 12px;
+			--r16: 16px;
+			--r24: 24px;
+			--r99: 999px;
+		}
+
+		/* ── LIGHT MODE ── */
+		[data-theme="light"] {
+			--bg: #f2f2fc;
+			--surf: #ffffff;
+			--surf2: #eaeaf8;
+			--surf3: #e0e0f2;
+			--surf4: #d6d6ec;
+			--brd: #d0d0e8;
+			--brd2: #c0c0dc;
+			--p-glow: rgba(124, 109, 250, .14);
+			--p-tint: rgba(124, 109, 250, .09);
+			--p-tint2: rgba(124, 109, 250, .04);
+
+			--g-surf: #d0f5ec;
+			--g-brd: #22d4a2;
+			--g-text: #085040;
+
+			--r-surf: #fde8e8;
+			--r-brd: #f07878;
+			--r-text: #7a1010;
+
+			--b-surf: #deeeff;
+			--b-brd: #60a5fa;
+			--b-text: #08306a;
+
+			--y-surf: #fff4d0;
+			--y-brd: #fbbf24;
+			--y-text: #6a3800;
+
+			--t: #12123e;
+			--t2: #5a5a8a;
+			--t3: #aaaace;
+		}
+
+		/* ──────────────────────────────────────────────────────
+       BASE
+    ────────────────────────────────────────────────────── */
+		*,
+		*::before,
+		*::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		html {
+			scroll-behavior: smooth;
+			font-size: 16px;
+		}
+
+		body {
+			font-family: 'Inter', sans-serif;
+			background: var(--bg);
+			color: var(--t);
+			min-height: 100vh;
+			transition: background .3s, color .3s;
+			-webkit-font-smoothing: antialiased;
+		}
+
+		/* Subtle ambient gradient behind everything */
+		body::before {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background:
+				radial-gradient(ellipse 70% 40% at 50% 0%, var(--p-tint) 0%, transparent 60%),
+				radial-gradient(ellipse 40% 30% at 0% 80%, rgba(34, 212, 162, .05) 0%, transparent 50%);
+			pointer-events: none;
+			z-index: 0;
+		}
+
+		/* ── SKIP LINK (accessibility) ── */
+		.skip-link {
+			position: absolute;
+			top: -100%;
+			left: 16px;
+			background: var(--p);
+			color: #fff;
+			padding: 10px 20px;
+			border-radius: 0 0 var(--r12) var(--r12);
+			font-weight: 600;
+			font-size: .9rem;
+			z-index: 999;
+			text-decoration: none;
+			transition: top .2s;
+		}
+
+		.skip-link:focus {
+			top: 0;
+			outline: 3px solid var(--p3);
+			outline-offset: 2px;
+		}
+
+		/* ── SCREEN-READER ONLY ── */
+		.sr-only {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			padding: 0;
+			margin: -1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			white-space: nowrap;
+			border: 0;
+		}
+
+		/* ── FOCUS INDICATOR (global) ── */
+		:focus-visible {
+			outline: 2px solid var(--p2);
+			outline-offset: 3px;
+			border-radius: 4px;
+		}
+
+		/* ──────────────────────────────────────────────────────
+       NUEVO HEADER INTEGRADO Y ESTILOS
+    ────────────────────────────────────────────────────── */
+		.header-dashboard {
+			position: sticky;
+			top: 0;
+			z-index: 100;
+			background: rgba(7, 7, 26, .90);
+			border-bottom: 1px solid var(--brd);
+			backdrop-filter: blur(18px);
+			-webkit-backdrop-filter: blur(18px);
+			display: flex;
+			flex-direction: column;
+			gap: 0;
+			padding: 0;
+		}
+
+		[data-theme="light"] .header-dashboard {
+			background: rgba(255, 255, 255, .90);
+		}
+
+		/* Fila Superior */
+		.header-top-bar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 12px 32px;
+			border-bottom: 1px solid var(--brd);
+		}
+
+		.logo-icon-simple {
+			width: 32px;
+			height: 32px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: var(--p2);
+			flex-shrink: 0;
+		}
+
+		.logo-text {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.logo-name {
+			font-family: 'Syne', sans-serif;
+			font-weight: 800;
+			font-size: 1.15rem;
+			color: var(--t);
+			line-height: 1.1;
+		}
+
+		.logo-sub-header {
+			font-size: .65rem;
+			color: var(--t3);
+			font-family: 'DM Mono', monospace;
+			letter-spacing: .08em;
+		}
+
+		/* Botones globales */
+		.header-global-actions {
+			display: flex;
+			gap: 10px;
+			align-items: center;
+		}
+
+		.btn-circle {
+			width: 38px;
+			height: 38px;
+			border-radius: 50%;
+			border: 1px solid var(--brd);
+			background: var(--surf2);
+			color: var(--t2);
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: all .15s;
+		}
+
+		.btn-circle:hover {
+			border-color: var(--brd2);
+			color: var(--t);
+			background: var(--surf3);
+		}
+
+		.btn-circle svg {
+			width: 18px;
+			height: 18px;
+		}
+
+		.btn-primary-add {
+			width: 38px;
+			height: 38px;
+			border-radius: 50%;
+			border: none;
+			background: linear-gradient(135deg, var(--p), var(--p2));
+			color: #fff;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: all .15s;
+			box-shadow: 0 0 16px var(--p-glow);
+		}
+
+		.btn-primary-add:hover {
+			box-shadow: 0 0 24px var(--p-glow);
+			transform: scale(1.05);
+		}
+
+		.btn-primary-add svg {
+			width: 20px;
+			height: 20px;
+		}
+
+		/* Sección Dashboard Integrado */
+		.header-dashboard-inner {
+			padding: 20px 32px;
+			display: grid;
+			grid-template-columns: 240px 1fr 1fr;
+			gap: 16px;
+			align-items: stretch;
+		}
+
+		/* Estilos comunes para tarjetas de header */
+		.h-card {
+			background: var(--surf);
+			border: 1px solid var(--brd);
+			border-radius: var(--r12);
+			padding: 16px;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.h-card-title {
+			font-family: 'Inter', sans-serif;
+			font-size: .7rem;
+			text-transform: uppercase;
+			letter-spacing: .08em;
+			color: var(--t3);
+			margin-bottom: 12px;
+			font-weight: 600;
+		}
+
+		.h-card-content {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			flex: 1;
+		}
+
+		/* Progreso Global */
+		.ring-wrap-header {
+			position: relative;
+			width: 60px;
+			height: 60px;
+			flex-shrink: 0;
+		}
+
+		.ring-svg {
+			width: 100%;
+			height: 100%;
+			transform: rotate(-90deg);
+			overflow: visible;
+		}
+
+		.ring-track {
+			fill: none;
+			stroke: var(--surf3);
+			stroke-width: 5;
+		}
+
+		.ring-fill {
+			fill: none;
+			stroke: url(#rg);
+			stroke-width: 5;
+			stroke-linecap: round;
+			transition: stroke-dashoffset .9s cubic-bezier(.4, 0, .2, 1);
+		}
+
+		.progress-pct-text {
+			font-family: 'Syne', sans-serif;
+			font-weight: 800;
+			font-size: 1.6rem;
+			color: var(--g);
+			line-height: 1;
+		}
+
+		.progress-total-text {
+			font-size: .8rem;
+			color: var(--t2);
+			margin-top: 2px;
+		}
+
+		/* Resumen Métricas */
+		.metrics-list {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 8px;
+		}
+
+		.metric-item {
+			font-size: .8rem;
+			color: var(--t2);
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.metric-item strong {
+			color: var(--t);
+			font-family: 'DM Mono', monospace;
+			font-weight: 500;
+		}
+
+		.metric-dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+		}
+
+		.metric-dot.yellow {
+			background: var(--y);
+		}
+
+		.metric-dot.blue {
+			background: var(--b);
+		}
+
+		.metric-dot.gray {
+			background: var(--t3);
+		}
+
+		/* Vistas y Filtros */
+		.h-card-header-actions {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 12px;
+		}
+
+		.view-controls-header {
+			display: flex;
+			gap: 6px;
+		}
+
+		.btn-circle-sm {
+			width: 28px;
+			height: 28px;
+			border-radius: 50%;
+			border: 1px solid var(--brd);
+			background: var(--surf2);
+			color: var(--t2);
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: all .15s;
+		}
+
+		.btn-circle-sm:hover {
+			border-color: var(--brd2);
+			color: var(--t);
+			background: var(--surf3);
+		}
+
+		.btn-circle-sm svg {
+			width: 14px;
+			height: 14px;
+		}
+
+		/* Control Segmentado */
+		.segmented-filter {
+			display: flex;
+			border: 1px solid var(--brd);
+			border-radius: var(--r8);
+			overflow: hidden;
+			background: var(--surf2);
+			width: 100%;
+		}
+
+		.segmented-btn {
+			flex: 1;
+			padding: 8px 12px;
+			border: none;
+			border-right: 1px solid var(--brd);
+			background: transparent;
+			color: var(--t2);
+			font-size: .75rem;
+			font-weight: 500;
+			cursor: pointer;
+			transition: all .15s;
+			font-family: 'Inter', sans-serif;
+			text-align: center;
+		}
+
+		.segmented-btn:last-child {
+			border-right: none;
+		}
+
+		.segmented-btn:hover {
+			background: var(--surf3);
+			color: var(--t);
+		}
+
+		.segmented-btn.active {
+			background: var(--p-tint);
+			color: var(--p2);
+			font-weight: 600;
+		}
+
+		/* ──────────────────────────────────────────────────────
+       NUEVOS MEDIA QUERIES RESPONSIVE
+    ────────────────────────────────────────────────────── */
+		@media (max-width: 960px) {
+			.header-dashboard-inner {
+				grid-template-columns: 1fr 1fr;
+			}
+
+			.progress-card {
+				grid-column: 1 / -1;
+			}
+		}
+
+		@media (max-width: 720px) {
+			.header-top-bar {
+				padding: 10px 16px;
+			}
+
+			.header-dashboard-inner {
+				padding: 16px;
+				grid-template-columns: 1fr;
+			}
+
+			.views-card .h-card-content {
+				flex-direction: column;
+				align-items: flex-start;
+			}
+
+			.segmented-filter {
+				width: 100%;
+				flex-direction: column;
+				border-radius: var(--r8);
+			}
+
+			.segmented-btn {
+				border-right: none;
+				border-bottom: 1px solid var(--brd);
+				width: 100%;
+				text-align: left;
+				padding: 10px 16px;
+			}
+
+			.segmented-btn:last-child {
+				border-bottom: none;
+			}
+		}
+
+		@media (max-width: 480px) {
+			.header-dashboard-inner {
+				padding: 12px;
+			}
+		}
+
+		/* ──────────────────────────────────────────────────────
+       MAIN
+    ────────────────────────────────────────────────────── */
+		main {
+			position: relative;
+			z-index: 1;
+			max-width: 960px;
+			margin: 0 auto;
+			padding: 12px 16px 100px;
+		}
+
+		.section-lbl {
+			font-size: .6rem;
+			text-transform: uppercase;
+			letter-spacing: .14em;
+			color: var(--t3);
+			font-family: 'DM Mono', monospace;
+			padding: 16px 0 8px;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.section-lbl::after {
+			content: '';
+			flex: 1;
+			height: 1px;
+			background: var(--brd);
+		}
+
+		.section-count {
+			font-size: .65rem;
+			color: var(--t3);
+			font-family: 'DM Mono', monospace;
+			background: var(--surf3);
+			padding: 1px 7px;
+			border-radius: var(--r99);
+			border: 1px solid var(--brd);
+		}
+
+		/* ──────────────────────────────────────────────────────
+       SUBJECT CARDS
+    ────────────────────────────────────────────────────── */
+		.card {
+			background: var(--surf);
+			border: 1px solid var(--brd);
+			border-radius: var(--r16);
+			margin-bottom: 8px;
+			overflow: hidden;
+			transition: border-color .2s, box-shadow .25s, transform .18s;
+			position: relative;
+		}
+
+		/* Left accent */
+		.card::before {
+			content: '';
+			position: absolute;
+			left: 0;
+			top: 10%;
+			bottom: 10%;
+			width: 4px;
+			border-radius: 0 4px 4px 0;
+			background: var(--brd2);
+			transition: background .3s, top .3s, bottom .3s;
+		}
+
+		.card.st-con_nota::before {
+			background: var(--g);
+			top: 5%;
+			bottom: 5%;
+		}
+
+		.card.st-convalidada::before {
+			background: var(--b);
+			top: 5%;
+			bottom: 5%;
+		}
+
+		.card.st-completada::before {
+			background: var(--g);
+			top: 5%;
+			bottom: 5%;
+		}
+
+		.card.st-en_curso::before {
+			background: var(--y);
+			top: 5%;
+			bottom: 5%;
+		}
+
+		.card:hover {
+			border-color: var(--brd2);
+			box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+			transform: translateY(-1px);
+		}
+
+		.card.open {
+			border-color: rgba(124, 109, 250, .4);
+			box-shadow: 0 0 0 1px rgba(124, 109, 250, .12), 0 8px 32px var(--p-glow);
+		}
+
+		.card.open::before {
+			background: var(--p);
+			top: 5%;
+			bottom: 5%;
+		}
+
+		/* Card header */
+		.card-hd {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 14px 16px 14px 20px;
+			cursor: pointer;
+			user-select: none;
+			border-radius: var(--r16) var(--r16) 0 0;
+		}
+
+		.card-hd:hover .card-name {
+			color: var(--p3);
+		}
+
+		.card-name {
+			font-family: 'Syne', sans-serif;
+			font-weight: 700;
+			font-size: .9rem;
+			flex: 1;
+			min-width: 0;
+			transition: color .15s;
+		}
+
+		/* Dots progress indicator */
+		.dots-wrap {
+			display: flex;
+			gap: 3px;
+			align-items: center;
+			flex-shrink: 0;
+			padding: 3px;
+			border-radius: var(--r99);
+			background: var(--surf2);
+			border: 1px solid var(--brd);
+		}
+
+		.dot {
+			width: 7px;
+			height: 7px;
+			border-radius: 50%;
+			background: var(--surf4);
+			transition: background .2s, transform .2s;
+		}
+
+		.dot.on {
+			background: var(--g);
+		}
+
+		.dot.on:hover {
+			transform: scale(1.3);
+		}
+
+		.card-score {
+			font-family: 'Syne', sans-serif;
+			font-weight: 800;
+			font-size: 1rem;
+			min-width: 48px;
+			text-align: right;
+			flex-shrink: 0;
+		}
+
+		.chevron {
+			color: var(--t3);
+			transition: transform .3s cubic-bezier(.4, 0, .2, 1), color .15s;
+			flex-shrink: 0;
+		}
+
+		.chevron svg {
+			width: 16px;
+			height: 16px;
+			display: block;
+		}
+
+		.card.open .chevron {
+			transform: rotate(180deg);
+		}
+
+		.card.open .chevron,
+		.card-hd:hover .chevron {
+			color: var(--p2);
+		}
+
+		/* Progress bar */
+		.prog-bar {
+			height: 3px;
+			background: var(--surf2);
+		}
+
+		.prog-fill {
+			height: 100%;
+			background: linear-gradient(90deg, var(--p), var(--g));
+			border-radius: var(--r99);
+			transition: width .6s cubic-bezier(.4, 0, .2, 1);
+		}
+
+		/* ── BADGES ── */
+		/* Solid opaque backgrounds — readable on ANY surface */
+		.badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			font-size: .64rem;
+			font-weight: 600;
+			font-family: 'DM Mono', monospace;
+			padding: 3px 9px;
+			border-radius: var(--r99);
+			letter-spacing: .03em;
+			text-transform: uppercase;
+			flex-shrink: 0;
+			border: 1px solid transparent;
+			line-height: 1.4;
+		}
+
+		.bg-pend {
+			background: var(--surf3);
+			color: var(--t2);
+			border-color: var(--brd2);
+		}
+
+		.bg-nota {
+			background: var(--g-surf);
+			color: var(--g);
+			border-color: var(--g-brd);
+		}
+
+		.bg-conv {
+			background: var(--b-surf);
+			color: var(--b);
+			border-color: var(--b-brd);
+		}
+
+		.bg-curs {
+			background: var(--y-surf);
+			color: var(--y);
+			border-color: var(--y-brd);
+		}
+
+		.bg-comp {
+			background: var(--g-surf);
+			color: var(--g);
+			border-color: var(--g-brd);
+		}
+
+		.bg-opt {
+			background: var(--y-surf);
+			color: var(--y-text);
+			border-color: var(--y-brd);
+			font-size: .58rem;
+		}
+
+		.bg-fct {
+			background: var(--p-tint);
+			color: var(--p2);
+			border-color: rgba(124, 109, 250, .3);
+			font-size: .58rem;
+		}
+
+		/* ──────────────────────────────────────────────────────
+       DETAIL PANEL
+    ────────────────────────────────────────────────────── */
+		.card-body {
+			max-height: 0;
+			overflow: hidden;
+			transition: max-height .42s cubic-bezier(.4, 0, .2, 1);
+		}
+
+		.card.open .card-body {
+			max-height: 2400px;
+		}
+
+		.card-inner {
+			padding: 2px 20px 20px;
+		}
+
+		.detail-sep {
+			height: 1px;
+			background: var(--brd);
+			margin-bottom: 14px;
+		}
+
+		/* Estado buttons */
+		.estado-row {
+			display: flex;
+			gap: 6px;
+			margin-bottom: 16px;
+			flex-wrap: wrap;
+		}
+
+		.estado-btn {
+			padding: 6px 16px;
+			border-radius: var(--r99);
+			border: 1px solid var(--brd);
+			background: var(--surf2);
+			color: var(--t2);
+			font-size: .74rem;
+			font-weight: 500;
+			font-family: 'Inter', sans-serif;
+			cursor: pointer;
+			transition: all .15s;
+		}
+
+		.estado-btn:hover {
+			border-color: var(--brd2);
+			color: var(--t);
+			background: var(--surf3);
+		}
+
+		.estado-btn.ea-pend {
+			border-color: var(--brd2);
+			color: var(--t);
+			background: var(--surf3);
+		}
+
+		.estado-btn.ea-nota {
+			border-color: var(--g-brd);
+			color: var(--g);
+			background: var(--g-surf);
+		}
+
+		.estado-btn.ea-conv {
+			border-color: var(--b-brd);
+			color: var(--b);
+			background: var(--b-surf);
+		}
+
+		/* Convalidada notice */
+		.conv-notice {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			background: var(--b-surf);
+			border: 1px solid var(--b-brd);
+			border-radius: var(--r8);
+			padding: 10px 14px;
+			font-size: .82rem;
+			color: var(--b-text);
+			margin-bottom: 14px;
+		}
+
+		.conv-notice svg {
+			flex-shrink: 0;
+		}
+
+		/* ── DELIVERABLE ROWS ── */
+		.del-list {
+			display: flex;
+			flex-direction: column;
+			gap: 5px;
+			margin-bottom: 12px;
+		}
+
+		.del-row {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 9px 12px;
+			border-radius: var(--r8);
+			background: var(--surf2);
+			border: 1px solid transparent;
+			transition: all .15s;
+		}
+
+		.del-row:hover {
+			border-color: var(--brd);
+		}
+
+		/* SOLID GREEN — readable text guaranteed */
+		.del-row.on {
+			background: var(--g-surf);
+			border-color: var(--g-brd);
+		}
+
+		.del-num {
+			font-family: 'DM Mono', monospace;
+			font-size: .7rem;
+			color: var(--t3);
+			width: 20px;
+			text-align: center;
+			flex-shrink: 0;
+			transition: color .15s;
+		}
+
+		/* On green rows, ensure contrast */
+		.del-row.on .del-num {
+			color: var(--g-text);
+		}
+
+		.del-name {
+			font-size: .84rem;
+			font-weight: 500;
+			flex: 1;
+			transition: color .15s;
+		}
+
+		/* On green rows, use light tinted white text */
+		.del-row.on .del-name {
+			color: var(--g-text);
+		}
+
+		/* Toggle */
+		.tog {
+			width: 30px;
+			height: 30px;
+			border-radius: var(--r8);
+			border: 1.5px solid var(--brd);
+			background: var(--surf3);
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: .85rem;
+			color: var(--t3);
+			transition: all .15s;
+			flex-shrink: 0;
+		}
+
+		.tog:hover {
+			border-color: var(--brd2);
+			color: var(--t);
+		}
+
+		/* Green toggle — dark icon for contrast */
+		.tog.on {
+			background: var(--g);
+			border-color: var(--g);
+			color: #06180f;
+			/* dark on green — WCAG AAA */
+			font-weight: 700;
+			font-size: .9rem;
+		}
+
+		/* Red toggle — readable text */
+		.tog.off {
+			background: var(--r-surf);
+			border-color: var(--r-brd);
+			color: var(--r-text);
+		}
+
+		/* Nota input */
+		.nota {
+			width: 72px;
+			background: var(--surf3);
+			border: 1px solid var(--brd);
+			color: var(--t);
+			font-family: 'DM Mono', monospace;
+			font-size: .82rem;
+			padding: 7px 8px;
+			border-radius: var(--r8);
+			text-align: center;
+			outline: none;
+			transition: border-color .15s, background .15s, color .15s;
+		}
+
+		.nota:focus {
+			border-color: var(--p2);
+			background: var(--surf2);
+		}
+
+		.nota:disabled {
+			opacity: .25;
+			cursor: not-allowed;
+		}
+
+		.nota.e {
+			color: var(--t3);
+		}
+
+		/* Good/bad states — visible on any background */
+		.nota.ok {
+			border-color: var(--g-brd);
+			color: var(--g);
+			background: var(--g-surf);
+		}
+
+		.nota.ko {
+			border-color: var(--r-brd);
+			color: var(--r-text);
+			background: var(--r-surf);
+		}
+
+		/* Nota label (sr) */
+		.nota-label {
+			display: none;
+		}
+
+		/* Examen row */
+		.exam-row {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 10px 12px;
+			background: var(--surf2);
+			border: 1px solid var(--brd);
+			border-radius: var(--r8);
+			margin-bottom: 12px;
+		}
+
+		.exam-lbl {
+			font-size: .82rem;
+			color: var(--t2);
+			flex: 1;
+			font-weight: 500;
+		}
+
+		.exam-badge {
+			font-size: .62rem;
+			background: var(--y-surf);
+			color: var(--y-text);
+			border: 1px solid var(--y-brd);
+			border-radius: var(--r99);
+			padding: 2px 9px;
+			font-family: 'DM Mono', monospace;
+			font-weight: 600;
+		}
+
+		/* Nota footer */
+		.nota-footer {
+			display: grid;
+			grid-template-columns: 1fr 1fr 1fr;
+			gap: 8px;
+		}
+
+		.nf-box {
+			border-radius: var(--r8);
+			padding: 12px 14px;
+			border: 1px solid var(--brd);
+			background: var(--surf2);
+		}
+
+		/* Final box — always clearly distinct */
+		.nf-final {
+			background: var(--p-tint);
+			border-color: rgba(124, 109, 250, .35);
+		}
+
+		.nf-final.nf-ok {
+			background: var(--g-surf);
+			border-color: var(--g-brd);
+		}
+
+		.nf-final.nf-ko {
+			background: var(--r-surf);
+			border-color: var(--r-brd);
+		}
+
+		.nf-lbl {
+			font-size: .6rem;
+			text-transform: uppercase;
+			letter-spacing: .09em;
+			color: var(--t3);
+			font-family: 'DM Mono', monospace;
+			margin-bottom: 6px;
+			display: flex;
+			align-items: center;
+			gap: 5px;
+		}
+
+		.nf-val {
+			font-family: 'Syne', sans-serif;
+			font-weight: 800;
+			font-size: 1.3rem;
+			line-height: 1;
+		}
+
+		.nf-val.v-g {
+			color: var(--g);
+		}
+
+		.nf-val.v-b {
+			color: var(--b);
+		}
+
+		.nf-val.v-r {
+			color: var(--r-text);
+		}
+
+		.nf-val.v-p {
+			color: var(--p2);
+		}
+
+		.nf-val.v-d {
+			color: var(--t3);
+			font-size: .95rem;
+			font-weight: 400;
+			font-family: 'Inter', sans-serif;
+		}
+
+		/* ── FCT DETAIL ── */
+		.fct-grid {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 8px;
+		}
+
+		.fct-card {
+			padding: 14px 10px;
+			border-radius: var(--r12);
+			border: 1.5px solid var(--brd);
+			background: var(--surf2);
+			cursor: pointer;
+			transition: all .15s;
+			text-align: center;
+		}
+
+		.fct-card:hover {
+			border-color: var(--brd2);
+			background: var(--surf3);
+			transform: translateY(-2px);
+			box-shadow: 0 4px 14px rgba(0, 0, 0, .25);
+		}
+
+		/* Each FCT card uses solid, accessible colors */
+		.fct-card.fct-pend {
+			border-color: var(--brd2);
+			background: var(--surf3);
+		}
+
+		.fct-card.fct-cur {
+			border-color: var(--y-brd);
+			background: var(--y-surf);
+		}
+
+		.fct-card.fct-done {
+			border-color: var(--g-brd);
+			background: var(--g-surf);
+		}
+
+		.fct-card.fct-pend .fct-label {
+			color: var(--t);
+		}
+
+		.fct-card.fct-cur .fct-label {
+			color: var(--y-text);
+		}
+
+		.fct-card.fct-done .fct-label {
+			color: var(--g-text);
+		}
+
+		.fct-icon {
+			font-size: 1.5rem;
+			margin-bottom: 6px;
+		}
+
+		.fct-label {
+			font-size: .82rem;
+			font-weight: 600;
+		}
+
+		.fct-desc {
+			font-size: .68rem;
+			color: var(--t2);
+			margin-top: 3px;
+			line-height: 1.3;
+		}
+
+		.fct-card.fct-cur .fct-desc {
+			color: var(--y-text);
+			opacity: .8;
+		}
+
+		.fct-card.fct-done .fct-desc {
+			color: var(--g-text);
+			opacity: .8;
+		}
+
+		/* ──────────────────────────────────────────────────────
+       MODAL
+    ────────────────────────────────────────────────────── */
+		.overlay {
+			position: fixed;
+			inset: 0;
+			background: rgba(0, 0, 0, .75);
+			z-index: 200;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 20px;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity .25s;
+			backdrop-filter: blur(6px);
+		}
+
+		.overlay.open {
+			opacity: 1;
+			pointer-events: all;
+		}
+
+		.modal {
+			background: var(--surf);
+			border: 1px solid var(--brd2);
+			border-radius: var(--r24);
+			padding: 24px;
+			width: 100%;
+			max-width: 400px;
+			transform: translateY(20px) scale(.96);
+			transition: transform .28s cubic-bezier(.34, 1.56, .64, 1);
+			box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
+		}
+
+		.overlay.open .modal {
+			transform: none;
+		}
+
+		.modal-hd {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-bottom: 20px;
+			padding-bottom: 14px;
+			border-bottom: 1px solid var(--brd);
+		}
+
+		.modal-title {
+			font-family: 'Syne', sans-serif;
+			font-weight: 800;
+			font-size: 1.05rem;
+			flex: 1;
+		}
+
+		.modal-x {
+			width: 32px;
+			height: 32px;
+			border-radius: var(--r8);
+			border: 1px solid var(--brd);
+			background: var(--surf2);
+			color: var(--t2);
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: .9rem;
+			transition: all .15s;
+		}
+
+		.modal-x:hover {
+			background: var(--surf3);
+			color: var(--t);
+		}
+
+		.modal-btn {
+			width: 100%;
+			padding: 12px 14px;
+			border-radius: var(--r12);
+			border: 1px solid var(--brd);
+			background: var(--surf2);
+			color: var(--t);
+			font-family: 'Inter', sans-serif;
+			font-size: .84rem;
+			font-weight: 500;
+			cursor: pointer;
+			text-align: left;
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			margin-bottom: 6px;
+			transition: all .15s;
+		}
+
+		.modal-btn:hover {
+			border-color: var(--p);
+			color: var(--p2);
+			background: var(--p-tint);
+		}
+
+		.modal-btn.danger:hover {
+			border-color: var(--r-brd);
+			color: var(--r-text);
+			background: var(--r-surf);
+		}
+
+		.modal-btn svg {
+			width: 16px;
+			height: 16px;
+			flex-shrink: 0;
+			color: var(--t2);
+		}
+
+		.modal-btn:hover svg,
+		.modal-btn.danger:hover svg {
+			color: inherit;
+		}
+
+		.mbtn-inner {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+		}
+
+		.mbtn-sub {
+			font-size: .7rem;
+			color: var(--t3);
+		}
+
+		.divider {
+			height: 1px;
+			background: var(--brd);
+			margin: 10px 0;
+		}
+
+		/* ──────────────────────────────────────────────────────
+       SHORTCUTS OVERLAY
+    ────────────────────────────────────────────────────── */
+		.shortcuts-panel {
+			background: var(--surf);
+			border: 1px solid var(--brd2);
+			border-radius: var(--r24);
+			padding: 24px;
+			width: 100%;
+			max-width: 360px;
+			transform: translateY(20px) scale(.96);
+			transition: transform .28s cubic-bezier(.34, 1.56, .64, 1);
+			box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
+		}
+
+		.overlay.open .shortcuts-panel {
+			transform: none;
+		}
+
+		.shortcut-row {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 8px 0;
+			border-bottom: 1px solid var(--brd);
+			font-size: .84rem;
+			color: var(--t2);
+		}
+
+		.shortcut-row:last-child {
+			border-bottom: none;
+		}
+
+		kbd {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 28px;
+			height: 24px;
+			padding: 0 7px;
+			border-radius: 5px;
+			border: 1px solid var(--brd2);
+			background: var(--surf3);
+			color: var(--t);
+			font-family: 'DM Mono', monospace;
+			font-size: .72rem;
+			font-weight: 500;
+			box-shadow: 0 2px 0 var(--brd2);
+		}
+
+		/* ──────────────────────────────────────────────────────
+       TOAST
+    ────────────────────────────────────────────────────── */
+		.toast {
+			position: fixed;
+			bottom: 24px;
+			left: 50%;
+			transform: translateX(-50%) translateY(16px);
+			opacity: 0;
+			pointer-events: none;
+			z-index: 300;
+			transition: all .32s cubic-bezier(.34, 1.56, .64, 1);
+			white-space: nowrap;
+		}
+
+		.toast.show {
+			opacity: 1;
+			transform: translateX(-50%) translateY(0);
+		}
+
+		.toast-inner {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			background: var(--surf);
+			border: 1px solid var(--brd2);
+			color: var(--t);
+			font-size: .82rem;
+			font-weight: 500;
+			padding: 10px 20px 10px 14px;
+			border-radius: var(--r99);
+			box-shadow: 0 8px 28px rgba(0, 0, 0, .4);
+		}
+
+		.toast-dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			flex-shrink: 0;
+		}
+
+		.toast-dot.ok {
+			background: var(--g);
+		}
+
+		.toast-dot.err {
+			background: var(--r);
+		}
+
+		.toast-dot.inf {
+			background: var(--p2);
+		}
+
+		.logo-wrap {
+			text-decoration: none;
+			display: flex;
+			align-items: center;
+			gap: 15px;
+		}
+
+		/* ──────────────────────────────────────────────────────
+       ANIMATIONS
+    ────────────────────────────────────────────────────── */
+		@keyframes slideUp {
+			from {
+				opacity: 0;
+				transform: translateY(12px);
+			}
+
+			to {
+				opacity: 1;
+				transform: none;
+			}
+		}
+
+		.card {
+			animation: slideUp .35s ease both;
+		}
+
+		/* ──────────────────────────────────────────────────────
+       REDUCED MOTION
+    ────────────────────────────────────────────────────── */
+		@media (prefers-reduced-motion: reduce) {
+
+			*,
+			*::before,
+			*::after {
+				animation-duration: .01ms !important;
+				animation-iteration-count: 1 !important;
+				transition-duration: .01ms !important;
+			}
+		}
+
+		/* ──────────────────────────────────────────────────────
+       RESPONSIVE
+    ────────────────────────────────────────────────────── */
+		@media (max-width: 720px) {
+			.stats-grid {
+				grid-template-columns: 1fr 1fr;
+			}
+
+			.stat-ring-col {
+				grid-column: 1 / -1;
+				border-right: none;
+				border-bottom: 1px solid var(--brd);
+			}
+
+			.nota-footer {
+				grid-template-columns: 1fr 1fr;
+			}
+
+			.nota-footer .nf-final {
+				grid-column: 1 / -1;
+			}
+
+			.dots-wrap {
+				display: none;
+			}
+
+			.header-center {
+				display: none;
+			}
+		}
+
+		@media (max-width: 480px) {
+			header {
+				padding: 0 14px;
+				height: 58px;
+			}
+
+			.logo-sub {
+				display: none;
+			}
+
+			main {
+				padding: 10px 12px 90px;
+			}
+
+			.fct-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.stats-grid {
+				grid-template-columns: 1fr 1fr;
+			}
+
+			.stat-cell {
+				padding: 14px 14px;
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<!-- Accessibility: skip to content -->
+	<a href="#main-content" class="skip-link">Ir al contenido principal</a>
+
+	<header class="header-dashboard">
+		<!-- Fila superior: Marca y acciones globales -->
+		<div class="header-top-bar">
+			<a href="#" class="logo-wrap" aria-label="SalvaDAW inicio">
+				<div class="logo-icon-simple" aria-hidden="true">
+					<!-- Icono de gorro académico simplificado -->
+					<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+						<path
+							d="M60.6 20.3L32 6.6 3.4 20.3c-.5.2-.9.7-.9 1.3v21c0 .6.4 1.1.9 1.3l28.6 13.7c.3.1.6.1.9.1.3 0 .6-.1.9-.1L60.6 44c.5-.2.9-.7.9-1.3v-21c0-.6-.4-1.1-.9-1.3zm-31.1 35L8 43.1V23.7l21.5 10.3c.4.2.8.2 1.1.2.3 0 .6-.1.9-.2L53 23.7l-.3 19.3L29.5 55.3zM32 9.2l25.8 12.3-25.8 12.3L6.2 21.5 32 9.2z"
+							fill="currentColor" />
+					</svg>
+				</div>
+				<div class="logo-text">
+					<div class="logo-name">SalvaDAW</div>
+				</div>
+			</a>
+
+			<div class="header-global-actions" role="group" aria-label="Controles globales">
+				<button class="btn-circle" id="themeBtn" title="Cambiar tema">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<circle cx="12" cy="12" r="5" />
+						<path
+							d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+					</svg>
+				</button>
+				<button class="btn-circle" id="shortcutsBtn" title="Atajos de teclado">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<rect x="2" y="4" width="20" height="16" rx="2" />
+						<path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10" />
+					</svg>
+				</button>
+				<button class="btn-circle" id="settingsBtn" title="Ajustes">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<circle cx="12" cy="12" r="3" />
+						<path
+							d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+					</svg>
+				</button>
+				<button class="btn-primary-add" id="addSubjectBtn" title="Añadir asignatura">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+						<line x1="12" y1="5" x2="12" y2="19" />
+						<line x1="5" y1="12" x2="19" y2="12" />
+					</svg>
+				</button>
+			</div>
+		</div>
+
+		<!-- Sección del panel de estadísticas y vistas -->
+		<div class="header-dashboard-inner">
+			<!-- Columna 1: Progreso Global -->
+			<div class="h-card progress-card">
+				<h3 class="h-card-title">Tu Progreso</h3>
+				<div class="h-card-content">
+					<div class="ring-wrap-header" id="statsRing">
+						<!-- El SVG del anillo se inyectará aquí vía JS -->
+					</div>
+					<div class="progress-info-header">
+						<div class="progress-pct-text" id="statsPctText">3%</div>
+						<div class="progress-total-text" id="statsTotalText">/ 35 entregables</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Columna 2: Resumen -->
+			<div class="h-card summary-card">
+				<h3 class="h-card-title">Resumen Global</h3>
+				<div class="h-card-content metrics-list">
+					<div class="metric-item"><span class="metric-dot yellow"></span>Media Global: <strong
+							id="statsAvg">5.00</strong></div>
+					<div class="metric-item"><span class="metric-dot blue"></span>Convalidadas: <strong id="statsConv">0</strong>
+					</div>
+					<div class="metric-item"><span class="metric-dot gray"></span>Asignaturas: <strong
+							id="statsTotalAsig">12</strong></div>
+				</div>
+			</div>
+
+			<!-- Columna 3: Vistas y Filtros -->
+			<div class="h-card views-card">
+				<div class="h-card-header-actions">
+					<h3 class="h-card-title">Vistas</h3>
+					<div class="view-controls-header">
+						<button class="btn-circle-sm" id="expandAllBtn" title="Expandir todo">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+								<path d="M4 9l8 8 8-8" />
+							</svg>
+						</button>
+						<button class="btn-circle-sm" id="collapseAllBtn" title="Colapsar todo">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+								<path d="M4 15l8-8 8 8" />
+							</svg>
+						</button>
+					</div>
+				</div>
+				<div class="h-card-content">
+					<!-- Filtro tipo control segmentado -->
+					<div class="segmented-filter" id="filterBarHeader" role="group" aria-label="Filtrar asignaturas">
+						<button class="segmented-btn active" data-f="all">Todas</button>
+						<button class="segmented-btn" data-f="pendiente">Pendientes</button>
+						<button class="segmented-btn" data-f="con_nota">Con nota</button>
+						<button class="segmented-btn" data-f="convalidada">Convalidadas</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</header>
+
+
+	<div class="stats-section" role="region" aria-label="Estadísticas globales">
+		<svg width="0" height="0" aria-hidden="true" style="position:absolute">
+			<defs>
+				<linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="100%">
+					<stop offset="0%" stop-color="#7c6dfa" />
+					<stop offset="100%" stop-color="#22d4a2" />
+				</linearGradient>
+			</defs>
+		</svg>
+		<div class="stats-grid" id="statsBar"></div>
+	</div>
+
+	<div class="filter-bar" id="filterBar" role="group" aria-label="Filtrar asignaturas"></div>
+
+	<!-- Main content -->
+	<main id="main-content" aria-label="Asignaturas de 2º DAW">
+		<div id="app"></div>
+	</main>
+
+	<!-- Toast (sr-friendly) -->
+	<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+		<div class="toast-inner">
+			<div class="toast-dot" id="toastDot"></div>
+			<span id="toastMsg"></span>
+		</div>
+	</div>
+
+	<!-- Settings modal -->
+	<div class="overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitleEl">
+		<div class="modal">
+			<div class="modal-hd">
+				<div class="modal-title" id="modalTitleEl">⚙️ Ajustes</div>
+				<button class="modal-x" id="modalCloseX" aria-label="Cerrar ajustes">✕</button>
+			</div>
+			<button class="modal-btn" id="exportPdfBtn">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+					<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+					<polyline points="14 2 14 8 20 8" />
+					<line x1="16" y1="13" x2="8" y2="13" />
+					<line x1="16" y1="17" x2="8" y2="17" />
+				</svg>
+				<div class="mbtn-inner">
+					<span>Descargar resumen PDF</span>
+					<span class="mbtn-sub">Genera un PDF con todas tus notas</span>
+				</div>
+			</button>
+			<button class="modal-btn" id="exportBtn">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+					<polyline points="7 10 12 15 17 10" />
+					<line x1="12" y1="15" x2="12" y2="3" />
+				</svg>
+				<div class="mbtn-inner">
+					<span>Exportar datos (.json)</span>
+					<span class="mbtn-sub">Descarga una copia de tu progreso</span>
+				</div>
+			</button>
+			<label class="modal-btn" for="importFile" style="cursor:pointer">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+					<polyline points="17 8 12 3 7 8" />
+					<line x1="12" y1="3" x2="12" y2="15" />
+				</svg>
+				<div class="mbtn-inner">
+					<span>Importar datos (.json)</span>
+					<span class="mbtn-sub">Restaura desde un archivo exportado</span>
+				</div>
+			</label>
+			<input type="file" id="importFile" accept=".json" aria-label="Seleccionar archivo de importación"
+				style="display:none">
+			<div class="divider"></div>
+			<button class="modal-btn danger" id="resetBtn">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+					<polyline points="1 4 1 10 7 10" />
+					<path d="M3.51 15a9 9 0 1 0 .49-3.5" />
+				</svg>
+				<div class="mbtn-inner">
+					<span>Resetear todos los datos</span>
+					<span class="mbtn-sub">Esta acción no se puede deshacer</span>
+				</div>
+			</button>
+		</div>
+	</div>
+
+	<!-- Keyboard shortcuts overlay -->
+	<div class="overlay" id="shortcutsOverlay" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitleEl">
+		<div class="shortcuts-panel">
+			<div class="modal-hd">
+				<div class="modal-title" id="shortcutsTitleEl">⌨️ Atajos de teclado</div>
+				<button class="modal-x" id="shortcutsClose" aria-label="Cerrar panel de atajos">✕</button>
+			</div>
+			<div class="shortcut-row"><kbd>E</kbd><span>Expandir todas las asignaturas</span></div>
+			<div class="shortcut-row"><kbd>C</kbd><span>Colapsar todas las asignaturas</span></div>
+			<div class="shortcut-row"><kbd>?</kbd><span>Ver estos atajos</span></div>
+			<div class="shortcut-row"><kbd>Esc</kbd><span>Cerrar modales abiertos</span></div>
+			<div class="shortcut-row"><kbd>↵ Space</kbd><span>Abrir/cerrar asignatura enfocada</span></div>
+			<div class="shortcut-row"><kbd>Tab</kbd><span>Navegar entre elementos</span></div>
+		</div>
+	</div>
+
+	<script>
+		'use strict';
+
+		// ════════════════════════════════════════════════════
+		// DATOS — 2º DAW
+		// ════════════════════════════════════════════════════
+		const SUBJECTS = [
+			{ id: 'ingles', name: 'Inglés', n: 8, opt: false },
+			{ id: 'servidor', name: 'Desarrollo Entorno Servidor', n: 3, opt: false },
+			{ id: 'interfaces_web', name: 'Diseño de Interfaces Web', n: 5, opt: false },
+			{ id: 'cliente', name: 'Desarrollo Entorno Cliente', n: 5, opt: false },
+			{ id: 'despliegue', name: 'Despliegue de Aplicaciones Web', n: 2, opt: false },
+			{ id: 'proyecto', name: 'Proyecto', n: 3, opt: false },
+			{ id: 'digitalizacion', name: 'Digitalización', n: 2, opt: false },
+			{ id: 'sostenibilidad', name: 'Sostenibilidad', n: 2, opt: false },
+			{ id: 'empleabilidad', name: 'Empleabilidad II', n: 3, opt: false },
+			{ id: 'python', name: 'Python', n: 1, opt: true },
+			{ id: 'posicionamiento', name: 'Posicionamiento y Optimización Web', n: 1, opt: true },
+			{ id: 'fct', name: 'FCT — Formación en Centro de Trabajo', n: 0, opt: false, fct: true },
+		];
+
+		// ════════════════════════════════════════════════════
+		// STATE
+		// ════════════════════════════════════════════════════
+		const KEY = 'salvadawv1';
+		let S = {};
+		let openSet = new Set();
+		let activeFilter = 'all';
+
+		function initState() {
+			try { S = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { S = {}; }
+			SUBJECTS.forEach(a => {
+				if (!S[a.id]) {
+					S[a.id] = {
+						estado: 'pendiente',
+						notaExamen: null,
+						dels: a.fct ? [] : Array.from({ length: a.n }, (_, i) => ({ id: i + 1, done: false, nota: null }))
+					};
+				}
+				if (!('notaExamen' in S[a.id])) S[a.id].notaExamen = null;
+			});
+			persist();
+		}
+
+		function persist() {
+			localStorage.setItem(KEY, JSON.stringify(S));
+			renderStats();
+			renderFilter();
+		}
+
+		// ════════════════════════════════════════════════════
+		// CALCULATIONS
+		// ════════════════════════════════════════════════════
+		function mediaEntregables(id) {
+			const list = S[id].dels.filter(e => e.done && e.nota !== null);
+			if (!list.length) return null;
+			return list.reduce((s, e) => s + e.nota, 0) / list.length;
+		}
+
+		function notaFinal(id) {
+			if (S[id].estado === 'convalidada') return null;
+			const m = mediaEntregables(id);
+			const x = S[id].notaExamen;
+			if (m === null || x === null) return null;
+			return m * 0.4 + x * 0.6;
+		}
+
+		function globalStats() {
+			let totalD = 0, doneD = 0, grades = [], conNota = 0, conv = 0, pend = 0;
+			SUBJECTS.forEach(a => {
+				const s = S[a.id];
+				totalD += s.dels.length;
+				doneD += s.dels.filter(e => e.done).length;
+				s.dels.forEach(e => { if (e.done && e.nota !== null) grades.push(e.nota); });
+				if (s.estado === 'convalidada') conv++;
+				else if (s.estado === 'con_nota') conNota++;
+				else pend++;
+			});
+			const avg = grades.length ? grades.reduce((a, b) => a + b, 0) / grades.length : null;
+			return { totalD, doneD, avg, conNota, conv, pend };
+		}
+
+		function filterCounts() {
+			let all = SUBJECTS.length, pend = 0, nota = 0, conv = 0;
+			SUBJECTS.forEach(a => {
+				const st = S[a.id].estado;
+				if (st === 'pendiente' || st === 'en_curso') pend++;
+				else if (st === 'con_nota' || st === 'completada') nota++;
+				else if (st === 'convalidada') conv++;
+			});
+			return { all, pend, nota, conv };
+		}
+
+		// ════════════════════════════════════════════════════
+		// RENDER STATS
+		// ════════════════════════════════════════════════════
+
+		function renderStats() {
+			const { totalD, doneD, avg, conNota, conv, pend } = globalStats();
+			const pct = totalD ? Math.round(doneD / totalD * 100) : 0;
+			const r = 27, circ = 2 * Math.PI * r;
+			const offset = circ - (pct / 100) * circ;
+
+			// Actualizar el anillo SVG (puedes reutilizar la mayor parte de tu HTML aquí)
+			document.getElementById('statsRing').innerHTML = `
+								<svg class="ring-svg" viewBox="0 0 68 68" aria-hidden="true">
+									<circle class="ring-track" cx="34" cy="34" r="${r}"/>
+										<circle class="ring-fill" cx="34" cy="34" r="${r}"
+											stroke="url(#rg)"
+											stroke-dasharray="${circ.toFixed(2)}"
+											stroke-dashoffset="${offset.toFixed(2)}"/>
+								</svg>`;
+
+			// Actualizar los textos
+			document.getElementById('statsPctText').textContent = `${pct}%`;
+			document.getElementById('statsTotalText').textContent = `/ ${totalD} entregables`;
+			document.getElementById('statsAvg').textContent = avg !== null ? avg.toFixed(2) : '—';
+			document.getElementById('statsConv').textContent = conv.toString();
+			document.getElementById('statsTotalAsig').textContent = SUBJECTS.length.toString();
+		}
+
+		// ════════════════════════════════════════════════════
+		// RENDER FILTER
+		// ════════════════════════════════════════════════════
+		function renderFilter() {
+			// El control segmentado ya está en el HTML, no necesitas re-renderizarlo completo,
+			// solo actualizar cuál es el botón activo.
+			document.querySelectorAll('.segmented-btn').forEach(b => {
+				b.classList.toggle('active', b.dataset.f === activeFilter);
+				b.setAttribute('aria-pressed', b.dataset.f === activeFilter);
+			});
+		}
+
+		// ════════════════════════════════════════════════════
+		// RENDER APP
+		// ════════════════════════════════════════════════════
+		function getFiltered() {
+			if (activeFilter === 'all') return SUBJECTS;
+			return SUBJECTS.filter(a => {
+				const st = S[a.id].estado;
+				if (activeFilter === 'pendiente') return st === 'pendiente' || st === 'en_curso';
+				if (activeFilter === 'con_nota') return st === 'con_nota' || st === 'completada';
+				if (activeFilter === 'convalidada') return st === 'convalidada';
+				return true;
+			});
+		}
+
+		function renderApp() {
+			renderStats();
+			renderFilter();
+			const subs = getFiltered();
+			const core = subs.filter(a => !a.opt && !a.fct);
+			const opts = subs.filter(a => a.opt);
+			const fcts = subs.filter(a => a.fct);
+
+			let html = '';
+			if (core.length) {
+				html += `<div class="section-lbl">Asignaturas principales <span class="section-count">${core.length}</span></div>`;
+				html += core.map((a, i) => card(a, i)).join('');
+			}
+			if (opts.length) {
+				html += `<div class="section-lbl" style="margin-top:6px">Optativas <span class="section-count">${opts.length}</span></div>`;
+				html += opts.map((a, i) => card(a, core.length + i)).join('');
+			}
+			if (fcts.length) {
+				html += `<div class="section-lbl" style="margin-top:6px">Prácticas</div>`;
+				html += fcts.map((a, i) => card(a, core.length + opts.length + i)).join('');
+			}
+			if (!subs.length) {
+				html = `<div style="text-align:center;padding:64px 20px;color:var(--t3)">
+                <div style="font-size:2.5rem;margin-bottom:12px">🔍</div>
+                <p style="font-size:.9rem">No hay asignaturas en esta categoría</p>
+            </div>`;
+			}
+
+			document.getElementById('app').innerHTML = html;
+			subs.forEach(a => bindCard(a));
+		}
+
+		// ════════════════════════════════════════════════════
+		// CARD HTML
+		// ════════════════════════════════════════════════════
+		function card(a, idx = 0) {
+			const s = S[a.id];
+			const isOpen = openSet.has(a.id);
+			const delay = `animation-delay:${(idx * 0.04).toFixed(2)}s`;
+
+			if (a.fct) {
+				const fctPct = s.estado === 'completada' ? 100 : s.estado === 'en_curso' ? 50 : 0;
+				const fctLabels = { pendiente: 'Pendiente', en_curso: 'En curso', completada: 'Completada' };
+				const badgeCls = { pendiente: 'bg-pend', en_curso: 'bg-curs', completada: 'bg-comp' };
+				return `
+            <div class="card st-${s.estado}${isOpen ? ' open' : ''}" id="card-${a.id}" style="${delay}">
+                <div class="card-hd"
+                     role="button"
+                     tabindex="0"
+                     aria-expanded="${isOpen}"
+                     aria-controls="body-${a.id}"
+                     data-id="${a.id}">
+                    <span class="card-name">${a.name}</span>
+                    <span class="badge bg-fct" aria-label="Prácticas">Prácticas</span>
+                    <span class="badge ${badgeCls[s.estado] || 'bg-pend'}">${fctLabels[s.estado] || 'Pendiente'}</span>
+                    <span class="card-score" style="color:var(--t3)" aria-label="Sin nota">—</span>
+                    <span class="chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span>
+                </div>
+                <div class="prog-bar" role="progressbar" aria-valuenow="${fctPct}" aria-valuemin="0" aria-valuemax="100" aria-label="${fctPct}% completado">
+                    <div class="prog-fill" style="width:${fctPct}%"></div>
+                </div>
+                <div class="card-body" id="body-${a.id}">
+                    <div class="card-inner">${fctDetail(a)}</div>
+                </div>
+            </div>`;
+			}
+
+			const media = mediaEntregables(a.id);
+			const nf = notaFinal(a.id);
+			const done = s.dels.filter(e => e.done).length;
+			const total = s.dels.length;
+			const pct = total ? done / total * 100 : 0;
+			const conval = s.estado === 'convalidada';
+			const nfStr = nf !== null ? nf.toFixed(2) : (conval ? 'Conv.' : '—');
+			const nfColor = nf !== null ? (nf >= 5 ? 'color:var(--g)' : 'color:var(--r-text)') : 'color:var(--t3)';
+			const bdgCls = { pendiente: 'bg-pend', con_nota: 'bg-nota', convalidada: 'bg-conv' };
+			const bdgLabel = { pendiente: 'Pendiente', con_nota: 'Con nota', convalidada: 'Convalidada' };
+			const dotLimit = Math.min(total, 10);
+			const dotsHtml = total > 0 ? `<div class="dots-wrap" aria-hidden="true" title="${done} de ${total} entregados">
+            ${Array.from({ length: dotLimit }, (_, i) => `<div class="dot${s.dels[i]?.done ? ' on' : ''}"></div>`).join('')}
+            ${total > dotLimit ? `<span style="font-size:.6rem;color:var(--t3);padding:0 3px;font-family:'DM Mono',monospace">+${total - dotLimit}</span>` : ''}
+        </div>` : '';
+
+			return `
+        <div class="card st-${s.estado}${isOpen ? ' open' : ''}" id="card-${a.id}" style="${delay}">
+            <div class="card-hd"
+                 role="button"
+                 tabindex="0"
+                 aria-expanded="${isOpen}"
+                 aria-controls="body-${a.id}"
+                 data-id="${a.id}">
+                <span class="card-name">${a.name}</span>
+                ${a.opt ? `<span class="badge bg-opt" aria-label="Optativa">Opt.</span>` : ''}
+                ${dotsHtml}
+                <span class="badge ${bdgCls[s.estado] || 'bg-pend'}">${bdgLabel[s.estado] || 'Pendiente'}</span>
+                <span class="card-score" style="${nfColor}" aria-label="Nota final: ${nfStr}">${nfStr}</span>
+                <span class="chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span>
+            </div>
+            <div class="prog-bar" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="${done} de ${total} entregables enviados">
+                <div class="prog-fill" style="width:${pct}%"></div>
+            </div>
+            <div class="card-body" id="body-${a.id}">
+                <div class="card-inner">${detail(a)}</div>
+            </div>
+        </div>`;
+		}
+
+		// ════════════════════════════════════════════════════
+		// FCT DETAIL
+		// ════════════════════════════════════════════════════
+		function fctDetail(a) {
+			const s = S[a.id];
+			const states = [
+				{ id: 'pendiente', lbl: 'Pendiente', icon: '⏳', desc: 'Todavía no empezadas' },
+				{ id: 'en_curso', lbl: 'En curso', icon: '🔥', desc: 'Realizando las prácticas' },
+				{ id: 'completada', lbl: 'Completada', icon: '✅', desc: 'Finalizadas con éxito' },
+			];
+			const fcls = { pendiente: 'fct-pend', en_curso: 'fct-cur', completada: 'fct-done' };
+			return `
+        <div class="detail-sep"></div>
+        <div class="fct-grid" role="group" aria-label="Estado de las prácticas">
+            ${states.map(st => `
+            <button class="fct-card${s.estado === st.id ? ` ${fcls[st.id]}` : ''}"
+                data-asig="${a.id}" data-estado="${st.id}" data-fct="1"
+                aria-pressed="${s.estado === st.id}"
+                title="${st.desc}">
+                <div class="fct-icon" aria-hidden="true">${st.icon}</div>
+                <div class="fct-label">${st.lbl}</div>
+                <div class="fct-desc">${st.desc}</div>
+            </button>`).join('')}
+        </div>`;
+		}
+
+		// ════════════════════════════════════════════════════
+		// SUBJECT DETAIL
+		// ════════════════════════════════════════════════════
+		function detail(a) {
+			const s = S[a.id];
+			const conval = s.estado === 'convalidada';
+			const media = mediaEntregables(a.id);
+			const nf = notaFinal(a.id);
+
+			const nc = v => v === null ? 'e' : v >= 5 ? 'ok' : 'ko';
+
+			const convNotice = conval ? `
+        <div class="conv-notice" role="note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Asignatura convalidada — notas desactivadas
+        </div>` : '';
+
+			const estadoRow = `
+        <div class="estado-row" role="group" aria-label="Estado de la asignatura">
+            ${[['pendiente', 'Pendiente', 'ea-pend'], ['con_nota', 'Con nota', 'ea-nota'], ['convalidada', 'Convalidada', 'ea-conv']].map(([id, lbl, cls]) => `
+            <button class="estado-btn${s.estado === id ? ` ${cls}` : ''}"
+                data-asig="${a.id}" data-estado="${id}"
+                aria-pressed="${s.estado === id}">
+                ${lbl}
+            </button>`).join('')}
+        </div>`;
+
+			const rows = s.dels.map(e => `
+        <div class="del-row${e.done ? ' on' : ''}">
+            <span class="del-num" aria-hidden="true">${e.id}</span>
+            <span class="del-name">Entregable ${e.id}</span>
+            <div class="tog${conval ? '' : (e.done ? ' on' : ' off')}"
+                 role="checkbox"
+                 tabindex="${conval ? -1 : 0}"
+                 aria-checked="${e.done}"
+                 aria-label="${e.done ? 'Entregado' : 'No entregado'} — clic para cambiar"
+                 data-asig="${a.id}" data-del="${e.id}" data-action="toggle">
+                ${conval ? '' : (e.done ? '✓' : '✕')}
+            </div>
+            <label class="sr-only" for="nota-${a.id}-${e.id}">Nota del entregable ${e.id} de ${a.name}</label>
+            <input class="nota ${nc(e.nota)}"
+                   id="nota-${a.id}-${e.id}"
+                   type="number" min="0" max="10" step="0.01"
+                   value="${e.nota !== null ? e.nota.toFixed(2) : ''}"
+                   placeholder="—"
+                   aria-label="Nota entregable ${e.id}"
+                   ${!e.done || conval ? 'disabled' : ''}
+                   data-asig="${a.id}" data-del="${e.id}" data-action="nota">
+        </div>`).join('');
+
+			const exVal = s.notaExamen !== null ? s.notaExamen.toFixed(2) : '';
+			const examRow = `
+        <div class="exam-row">
+            <label class="exam-lbl" for="exam-${a.id}">
+                <span aria-hidden="true">📝</span> Nota examen presencial
+            </label>
+            <span class="exam-badge" aria-label="Peso del examen: 60%">60%</span>
+            <input class="nota ${nc(s.notaExamen)}"
+                   id="exam-${a.id}"
+                   type="number" min="0" max="10" step="0.01"
+                   value="${exVal}" placeholder="—"
+                   aria-label="Nota del examen presencial de ${a.name}"
+                   ${conval ? 'disabled' : ''}
+                   data-asig="${a.id}" data-action="examen">
+        </div>`;
+
+			const nfCls = nf !== null ? (nf >= 5 ? 'nf-ok' : 'nf-ko') : '';
+			const nfVal = nf !== null ? (nf >= 5 ? 'v-g' : 'v-r') : 'v-d';
+
+			const footer = `
+        <div class="nota-footer" role="group" aria-label="Resumen de notas">
+            <div class="nf-box">
+                <div class="nf-lbl">Entregables <span style="color:var(--g);font-size:.56rem" aria-label="peso 40 por ciento">40%</span></div>
+                <div class="nf-val v-g" aria-live="polite">${media !== null ? media.toFixed(2) : '—'}</div>
+            </div>
+            <div class="nf-box">
+                <div class="nf-lbl">Examen <span style="color:var(--b);font-size:.56rem" aria-label="peso 60 por ciento">60%</span></div>
+                <div class="nf-val v-b" aria-live="polite">${exVal || '—'}</div>
+            </div>
+            <div class="nf-box nf-final ${nfCls}">
+                <div class="nf-lbl">Nota Final</div>
+                <div class="nf-val ${nfVal}" aria-live="polite">${nf !== null ? nf.toFixed(2) : '—'}</div>
+            </div>
+        </div>`;
+
+			return `
+        <div class="detail-sep"></div>
+        ${convNotice}
+        ${estadoRow}
+        <div class="del-list" role="list" aria-label="Entregables de ${a.name}">${rows}</div>
+        ${examRow}
+        ${footer}`;
+		}
+
+		// ════════════════════════════════════════════════════
+		// BIND EVENTS
+		// ════════════════════════════════════════════════════
+		function bindCard(a) {
+			const hd = document.querySelector(`#card-${a.id} .card-hd`);
+			if (!hd) return;
+
+			const toggle = () => {
+				if (openSet.has(a.id)) openSet.delete(a.id);
+				else openSet.add(a.id);
+				rerender(a);
+			};
+
+			hd.addEventListener('click', toggle);
+			hd.addEventListener('keydown', e => {
+				if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+			});
+
+			if (!openSet.has(a.id)) return;
+
+			// Estado buttons
+			document.querySelectorAll(`#card-${a.id} .estado-btn`).forEach(b => {
+				b.addEventListener('click', e => {
+					e.stopPropagation();
+					S[a.id].estado = b.dataset.estado;
+					persist(); rerender(a);
+				});
+			});
+
+			// FCT buttons
+			document.querySelectorAll(`#card-${a.id} [data-fct="1"]`).forEach(b => {
+				b.addEventListener('click', e => {
+					e.stopPropagation();
+					S[a.id].estado = b.dataset.estado;
+					persist(); rerender(a);
+				});
+			});
+
+			// Toggle checkboxes (click + keyboard)
+			document.querySelectorAll(`#card-${a.id} [data-action="toggle"]`).forEach(t => {
+				const doToggle = e => {
+					e.stopPropagation();
+					const d = S[a.id].dels.find(x => x.id === +t.dataset.del);
+					d.done = !d.done;
+					if (!d.done) d.nota = null;
+					persist(); rerender(a);
+				};
+				t.addEventListener('click', doToggle);
+				t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doToggle(e); } });
+			});
+
+			// Nota inputs
+			document.querySelectorAll(`#card-${a.id} [data-action="nota"]`).forEach(inp => {
+				inp.addEventListener('change', e => {
+					e.stopPropagation();
+					const d = S[a.id].dels.find(x => x.id === +inp.dataset.del);
+					let v = parseFloat(inp.value);
+					if (isNaN(v)) d.nota = null;
+					else { v = Math.min(10, Math.max(0, v)); d.nota = Math.round(v * 100) / 100; }
+					persist(); rerender(a);
+				});
+			});
+
+			// Exam input
+			const exInp = document.querySelector(`#card-${a.id} [data-action="examen"]`);
+			if (exInp) {
+				exInp.addEventListener('change', e => {
+					e.stopPropagation();
+					let v = parseFloat(exInp.value);
+					if (isNaN(v)) S[a.id].notaExamen = null;
+					else { v = Math.min(10, Math.max(0, v)); S[a.id].notaExamen = Math.round(v * 100) / 100; }
+					persist(); rerender(a);
+				});
+			}
+		}
+
+		function rerender(a) {
+			const el = document.getElementById(`card-${a.id}`);
+			if (!el) return;
+			const idx = parseInt(el.style.animationDelay) || 0;
+			el.outerHTML = card(a, idx);
+			bindCard(a);
+			renderStats();
+			renderFilter();
+		}
+
+		// ════════════════════════════════════════════════════
+		// THEME
+		// ════════════════════════════════════════════════════
+		function initTheme() {
+			document.documentElement.dataset.theme = localStorage.getItem('salvadawTheme') || 'dark';
+		}
+
+		document.getElementById('themeBtn').addEventListener('click', () => {
+			const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+			document.documentElement.dataset.theme = next;
+			localStorage.setItem('salvadawTheme', next);
+		});
+
+		// ════════════════════════════════════════════════════
+		// EXPAND / COLLAPSE ALL
+		// ════════════════════════════════════════════════════
+		document.getElementById('expandAllBtn').addEventListener('click', () => {
+			SUBJECTS.forEach(a => openSet.add(a.id));
+			renderApp();
+			toast('Todas expandidas', 'inf');
+		});
+
+		document.getElementById('collapseAllBtn').addEventListener('click', () => {
+			openSet.clear();
+			renderApp();
+			toast('Todas colapsadas', 'inf');
+		});
+
+		// ════════════════════════════════════════════════════
+		// MODALS
+		// ════════════════════════════════════════════════════
+		function openOverlay(id) { document.getElementById(id).classList.add('open'); }
+		function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+
+		document.getElementById('settingsBtn').addEventListener('click', () => openOverlay('modalOverlay'));
+		document.getElementById('modalCloseX').addEventListener('click', () => closeOverlay('modalOverlay'));
+		document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === document.getElementById('modalOverlay')) closeOverlay('modalOverlay'); });
+
+		document.getElementById('shortcutsBtn').addEventListener('click', () => openOverlay('shortcutsOverlay'));
+		document.getElementById('shortcutsClose').addEventListener('click', () => closeOverlay('shortcutsOverlay'));
+		document.getElementById('shortcutsOverlay').addEventListener('click', e => { if (e.target === document.getElementById('shortcutsOverlay')) closeOverlay('shortcutsOverlay'); });
+
+		// ════════════════════════════════════════════════════
+		// KEYBOARD SHORTCUTS
+		// ════════════════════════════════════════════════════
+		document.addEventListener('keydown', e => {
+			const tag = document.activeElement?.tagName;
+			if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+			if (e.key === 'Escape') {
+				closeOverlay('modalOverlay');
+				closeOverlay('shortcutsOverlay');
+			}
+			if (e.key === '?') openOverlay('shortcutsOverlay');
+			if (e.key === 'e' || e.key === 'E') { SUBJECTS.forEach(a => openSet.add(a.id)); renderApp(); toast('Todas expandidas', 'inf'); }
+			if (e.key === 'c' || e.key === 'C') { openSet.clear(); renderApp(); toast('Todas colapsadas', 'inf'); }
+		});
+
+		document.getElementById('filterBarHeader').addEventListener('click', e => {
+			const b = e.target.closest('.segmented-btn');
+			if (b) { activeFilter = b.dataset.f; renderApp(); }
+		});
+
+		// ════════════════════════════════════════════════════
+		// EXPORT / IMPORT / RESET
+		// ════════════════════════════════════════════════════
+		document.getElementById('exportBtn').addEventListener('click', () => {
+			const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+			const a = document.createElement('a');
+			a.href = URL.createObjectURL(blob);
+			a.download = `salvadawdata_${new Date().toISOString().slice(0, 10)}.json`;
+			a.click();
+			toast('Datos exportados', 'ok');
+			closeOverlay('modalOverlay');
+		});
+
+		document.getElementById('importFile').addEventListener('change', e => {
+			const file = e.target.files[0]; if (!file) return;
+			const reader = new FileReader();
+			reader.onload = ev => {
+				try {
+					S = JSON.parse(ev.target.result);
+					persist(); renderApp();
+					toast('Datos importados', 'ok');
+					closeOverlay('modalOverlay');
+				} catch { toast('Archivo inválido', 'err'); }
+			};
+			reader.readAsText(file);
+			e.target.value = '';
+		});
+
+		document.getElementById('resetBtn').addEventListener('click', () => {
+			if (!confirm('¿Seguro que quieres borrar TODOS los datos? Esta acción no se puede deshacer.')) return;
+			localStorage.removeItem(KEY);
+			openSet.clear();
+			initState(); renderApp();
+			toast('Datos reseteados', 'inf');
+			closeOverlay('modalOverlay');
+		});
+
+		// ════════════════════════════════════════════════════
+		// EXPORT PDF
+		// ════════════════════════════════════════════════════
+		document.getElementById('exportPdfBtn').addEventListener('click', () => {
+			closeOverlay('modalOverlay');
+			exportPDF();
+		});
+
+		function exportPDF() {
+			const { jsPDF } = window.jspdf;
+			const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+			const W = 210, M = 14;
+			const PUR = [124, 109, 250], GRN = [34, 212, 162], RED = [240, 120, 120];
+			const BLU = [96, 165, 250], YLW = [251, 191, 36];
+			const DRK = [7, 7, 26], GRY = [110, 110, 154], LGR = [236, 236, 248], WHT = [255, 255, 255];
+
+			let y = M;
+
+			doc.setFillColor(...PUR);
+			doc.rect(0, 0, W, 26, 'F');
+			doc.setTextColor(...WHT);
+			doc.setFont('helvetica', 'bold');
+			doc.setFontSize(17);
+			doc.text('SalvaDAW', M, 12);
+			doc.setFont('helvetica', 'normal');
+			doc.setFontSize(8);
+			doc.text('Resumen de entregables y notas · 2º Desarrollo de Aplicaciones Web', M, 18);
+			doc.text(new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }), W - M, 18, { align: 'right' });
+			y = 34;
+
+			const { totalD, doneD, avg, conv, conNota, pend } = globalStats();
+			const pctG = totalD ? Math.round(doneD / totalD * 100) : 0;
+
+			doc.autoTable({
+				startY: y,
+				head: [['Resumen Global — 2º DAW', '']],
+				body: [
+					['Entregables enviados', `${doneD} / ${totalD} (${pctG}%)`],
+					['Media global', avg !== null ? avg.toFixed(2) : '—'],
+					['Asignaturas con nota', conNota.toString()],
+					['Convalidadas', conv.toString()],
+					['Pendientes', pend.toString()],
+				],
+				theme: 'plain',
+				headStyles: { fillColor: PUR, textColor: WHT, fontStyle: 'bold', fontSize: 9 },
+				bodyStyles: { fontSize: 8.5, textColor: DRK },
+				alternateRowStyles: { fillColor: LGR },
+				columnStyles: { 0: { cellWidth: 80, fontStyle: 'bold' } },
+				margin: { left: M, right: M },
+			});
+
+			y = doc.lastAutoTable.finalY + 12;
+
+			SUBJECTS.forEach(a => {
+				const s = S[a.id];
+				const conval = s.estado === 'convalidada';
+				const media = mediaEntregables(a.id);
+				const nf = notaFinal(a.id);
+				const doneA = s.dels.filter(e => e.done).length;
+
+				if (y > 240) { doc.addPage(); y = M; }
+
+				doc.setFillColor(...DRK);
+				doc.rect(M, y, W - M * 2, 8, 'F');
+				doc.setTextColor(...WHT);
+				doc.setFont('helvetica', 'bold');
+				doc.setFontSize(9);
+				doc.text(a.name + (a.opt ? '  [Optativa]' : ''), M + 3, y + 5.5);
+
+				const ecol = conval ? BLU : s.estado === 'con_nota' ? GRN : GRY;
+				const elbl = conval ? 'Convalidada' : s.estado === 'con_nota' ? 'Con nota' : 'Pendiente';
+				doc.setFillColor(...ecol);
+				doc.roundedRect(W - M - 30, y + 1.5, 28, 5, 1, 1, 'F');
+				doc.setTextColor(...WHT);
+				doc.setFontSize(7);
+				doc.text(elbl, W - M - 16, y + 5.3, { align: 'center' });
+				y += 10;
+
+				if (a.fct) {
+					const fl = { pendiente: 'Pendiente', en_curso: 'En curso', completada: 'Completada' };
+					doc.autoTable({ startY: y, body: [[`Estado: ${fl[s.estado] || 'Pendiente'}`]], theme: 'plain', bodyStyles: { fontSize: 8, textColor: GRY, fillColor: LGR }, margin: { left: M, right: M } });
+				} else if (conval) {
+					doc.autoTable({ startY: y, body: [['Asignatura convalidada']], theme: 'plain', bodyStyles: { fontSize: 8, textColor: BLU, fillColor: [225, 240, 255] }, margin: { left: M, right: M } });
+				} else {
+					const rows = s.dels.map(e => [`Entregable ${e.id}`, e.done ? '✓ Entregado' : '✕ Pendiente', e.nota !== null ? e.nota.toFixed(2) : '—']);
+					rows.push([
+						{ content: `Entregados: ${doneA}/${s.dels.length}`, styles: { fontStyle: 'bold', fillColor: LGR } },
+						{ content: `Media (40%): ${media !== null ? media.toFixed(2) : '—'}`, styles: { fontStyle: 'bold', fillColor: LGR } },
+						{ content: `Examen (60%): ${s.notaExamen !== null ? s.notaExamen.toFixed(2) : '—'}`, styles: { fontStyle: 'bold', fillColor: LGR } },
+					]);
+					doc.autoTable({
+						startY: y,
+						head: [['Entregable', 'Estado', 'Nota']],
+						body: rows,
+						theme: 'striped',
+						headStyles: { fillColor: [40, 40, 60], textColor: WHT, fontSize: 8, fontStyle: 'bold' },
+						bodyStyles: { fontSize: 8, textColor: DRK },
+						alternateRowStyles: { fillColor: [248, 248, 254] },
+						columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 55, halign: 'center' }, 2: { halign: 'center' } },
+						didParseCell(data) {
+							if (data.column.index === 1 && data.section === 'body') {
+								const v = typeof data.cell.raw === 'string' ? data.cell.raw : '';
+								if (v.startsWith('✓')) data.cell.styles.textColor = GRN;
+								if (v.startsWith('✕')) data.cell.styles.textColor = RED;
+							}
+						},
+						margin: { left: M, right: M },
+					});
+					if (nf !== null) {
+						const ny = doc.lastAutoTable.finalY;
+						doc.setFillColor(...(nf >= 5 ? GRN : RED));
+						doc.roundedRect(M, ny + 1, W - M * 2, 8, 1, 1, 'F');
+						doc.setTextColor(...(nf >= 5 ? DRK : WHT));
+						doc.setFont('helvetica', 'bold');
+						doc.setFontSize(9);
+						doc.text(`NOTA FINAL: ${nf.toFixed(2)}   (${media !== null ? media.toFixed(2) : '—'} × 40%  +  ${s.notaExamen !== null ? s.notaExamen.toFixed(2) : '—'} × 60%)`, M + 4, ny + 6.3);
+						y = ny + 12;
+					} else {
+						y = doc.lastAutoTable.finalY + 4;
+					}
+				}
+
+				if (conval || a.fct) y = doc.lastAutoTable.finalY + 4;
+				y += 6;
+			});
+
+			const pages = doc.getNumberOfPages();
+			for (let i = 1; i <= pages; i++) {
+				doc.setPage(i);
+				doc.setFontSize(7);
+				doc.setTextColor(...GRY);
+				doc.text(`SalvaDAW · ${new Date().toLocaleDateString('es-ES')} · Pág. ${i}/${pages}`, W / 2, 292, { align: 'center' });
+			}
+
+			doc.save(`SalvaDAW_resumen_${new Date().toISOString().slice(0, 10)}.pdf`);
+			toast('PDF descargado', 'ok');
+		}
+
+		// ════════════════════════════════════════════════════
+		// TOAST
+		// ════════════════════════════════════════════════════
+		let toastTimer;
+		function toast(msg, type = 'ok') {
+			clearTimeout(toastTimer);
+			const el = document.getElementById('toast');
+			const dot = document.getElementById('toastDot');
+			const txt = document.getElementById('toastMsg');
+			dot.className = `toast-dot ${type}`;
+			txt.textContent = msg;
+			el.classList.add('show');
+			toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+		}
+
+		// ════════════════════════════════════════════════════
+		// INIT
+		// ════════════════════════════════════════════════════
+		initTheme();
+		initState();
+		renderApp();
+	</script>
+</body>
+
+</html>
